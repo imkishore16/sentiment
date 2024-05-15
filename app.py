@@ -11,94 +11,39 @@ from flask_jwt_extended import JWTManager
 import secrets
 # from blocklist import BLOCKLIST
 from flask_migrate import Migrate
-
+from controllers.User import blp as userblp
+from controllers.Admin import blp as adminblp
+from controllers.Temp import blp as tempblp
+from controllers.Auth import auth_bp
+from flask_cors import CORS
 
 def create_app():
     app=Flask(__name__)
     app.config["PROPAGATE_EXCEPTIONS"] = True  
-    app.config["API_TITLE"] = "Stores REST Api"
+    app.config["API_TITLE"] = "Reviews REST API"
     app.config["API_VERSION"] = "V1"
     app.config["OPENAPI_VERSION"] = "3.0.3"
     app.config["OPENAPI_URL_PREFIX"] = "/"
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/" 
+    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
     
-    # db_url = "postgresql://postgres:root%40123@localhost/ordering"
-    app.config["SQLALCHEMY_DATABASE_URI"] = "db_url" or "sqlite:///data.db"
+    db_url = "postgresql://postgres:root%40123@localhost/reviewsystem"
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
-    
     api = Api(app)
-    migrate = Migrate(app, db)  
+    CORS(app)
+    migrate = Migrate(app, db)
+    # jwt = JWTManager(app)
+    # app.register_blueprint(auth_bp)
+    # app.register_blueprint(userblp)
+    app.register_blueprint(tempblp) 
+    # app.register_blueprint(adminblp) 
+
     with app.app_context():
         db.create_all()
-    jwt = JWTManager(app)
-
-    auth_bp = Blueprint('auth', __name__, description='auth')
-
-    @auth_bp.route('/api/register', methods=['POST'])
-    def register():
-        data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-
-        if not username or not password:
-            return jsonify({'error': 'Username and password are required'}), 400
-
-        if User.query.filter_by(username=username).first():
-            return jsonify({'error': 'Username already exists'}), 400
-
-        new_user = User(username=username)
-        new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.commit()
-
-        return jsonify({'message': 'User registered successfully'}), 201
-
-    @auth_bp.route('/api/login', methods=['POST'])
-    def login():
-        data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-
-        if not username or not password:
-            return jsonify({'error': 'Username and password are required'}), 400
-
-        user = User.query.filter_by(username=username).first()
-
-        if user is None or not user.check_password(password):
-            return jsonify({'error': 'Invalid username or password'}), 401
-
-        access_token = create_access_token(identity=user.id)
-        return jsonify({'access_token': access_token}), 200
-
-    # Register blueprints and error handlers
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-
-    @app.before_first_request
-    def create_tables():
-        db.create_all()
-        
-    return app
-
-
-
-
-
-
-
 
     
-
-
-
-
-
-
-
-
-
+    return app
         
 
-
-     

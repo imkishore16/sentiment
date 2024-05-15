@@ -8,3 +8,5 @@ passlib
 psycopg2-binary
 flask-swagger-ui
 Flask-Migrate
+scikit-learn 
+nltk

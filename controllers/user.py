@@ -12,11 +12,15 @@ from flask_jwt_extended import jwt_required, current_user
 
 from Models import *
 from Schemas import *
+
 from Exception import CustomException
 from flask import jsonify, request
+from Mlmodel.predict import predict_sentiment
+
+
+
 
 blp = Blueprint("user",__name__,description="user side Api's")
-
 
 @blp.route('/api/movies/<string:movie_name>/reviews')
 def get_movie_reviews(movie_name):
@@ -28,6 +32,12 @@ def get_movie_reviews(movie_name):
 
     return jsonify(serialized_reviews), 200
 
+# @blp.route('/get-user', meth
+@blp.route('/testing', methods=['POST'])
+def get_status():
+    return jsonify({"status": "App is working!"}), 200
+
+
 
 @blp.route('/api/movies/<string:movie_name>/reviews', methods=['POST'])
 def create_movie_review(movie_name):
@@ -36,7 +46,8 @@ def create_movie_review(movie_name):
     review_data = request.get_json()
     review_text = review_data.get('review')
     # // call the sentiment ml model
-    sentiment = "temp"  
+    print(review_text)
+    sentiment = predict_sentiment(review_text)
 
     if not review_text or not sentiment:
         return jsonify({'error': 'Both review and sentiment are required'}), 400
